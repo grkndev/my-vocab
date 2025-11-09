@@ -4,11 +4,11 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   SharedValue,
   interpolate,
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 
 const screenWidth = Dimensions.get("screen").width;
 export const tinderCardWidth = Dimensions.get("screen").width * 0.85;
@@ -24,8 +24,14 @@ type TinderCard = {
   numOfCards: number;
   index: number;
   activeIndex: SharedValue<number>;
-  onResponse: (user: { name: string; status: boolean; id: number; meaning: string; uniqueKey: string }) => void;
-  isRemoving: boolean
+  onResponse: (user: {
+    name: string;
+    status: boolean;
+    id: number;
+    meaning: string;
+    uniqueKey: string;
+  }) => void;
+  isRemoving: boolean;
 };
 
 export default function TinderCard({
@@ -34,17 +40,19 @@ export default function TinderCard({
   index,
   activeIndex,
   onResponse,
-  isRemoving
+  isRemoving,
 }: TinderCard) {
   const translationX = useSharedValue(0);
   const [isFlipped, setIsFlipped] = useState(false);
 
   const animatedCard = useAnimatedStyle(() => ({
-    opacity: isRemoving ? 0 : interpolate(
-      activeIndex.value,
-      [index - 1, index, index + 1],
-      [1 - 1 / 5, 1, 1]
-    ),
+    opacity: isRemoving
+      ? 0
+      : interpolate(
+          activeIndex.value,
+          [index - 1, index, index + 1],
+          [1 - 1 / 5, 1, 1]
+        ),
     transform: [
       {
         scale: interpolate(
@@ -85,26 +93,21 @@ export default function TinderCard({
     })
     .onEnd((event) => {
       if (Math.abs(event.velocityX) > 400) {
-
-        translationX.value = withSpring(
-          Math.sign(event.velocityX) * 500, 
-          {
-            velocity: event.velocityX,
-            damping: 25,
-            stiffness: 100,
-          }
-        );
+        translationX.value = withSpring(Math.sign(event.velocityX) * 500, {
+          velocity: event.velocityX,
+          damping: 25,
+          stiffness: 100,
+        });
         activeIndex.value = withSpring(index + 1, {
           damping: 25,
           stiffness: 100,
         });
-        runOnJS(onResponse)({
+        scheduleOnRN(onResponse, {
           ...user,
           status: event.velocityX > 0,
           id: index,
         });
       } else {
-       
         translationX.value = withSpring(0, {
           damping: 25,
           stiffness: 100,
