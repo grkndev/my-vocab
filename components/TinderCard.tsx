@@ -1,17 +1,21 @@
 import React, { useState } from "react";
-import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
+import { Dimensions, Pressable, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   SharedValue,
   interpolate,
   useAnimatedStyle,
   useSharedValue,
-  withSpring
+  withSpring,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
+
 const screenWidth = Dimensions.get("screen").width;
 export const tinderCardWidth = Dimensions.get("screen").width * 0.85;
+
+// Create an Animated component that supports NativeWind className
+const AnimatedStyledView = Animated.createAnimatedComponent(View);
 
 type TinderCard = {
   user: {
@@ -117,140 +121,73 @@ export default function TinderCard({
 
   return (
     <GestureDetector gesture={gesture}>
-      <Animated.View
+      <AnimatedStyledView
+        className="absolute rounded-2xl"
         style={[
-          styles.card,
           animatedCard,
           {
+            width: tinderCardWidth,
+            aspectRatio: 1 / 1.5,
             zIndex: numOfCards - index,
           },
         ]}
       >
         <Pressable
           onPress={() => setIsFlipped(!isFlipped)}
-          style={styles.cardContent}
+          className="w-full h-full bg-white rounded-2xl shadow-lg"
+          style={{ elevation: 8 }}
         >
-          <View style={styles.cardInner}>
+          <View className="w-full h-full items-center justify-center p-8 rounded-2xl">
             {!isFlipped ? (
-              // Ön yüz - Kelime
-              <View style={styles.frontFace}>
-                <Text style={styles.wordText}>{user.name}</Text>
+              // Front face - Word
+              <View className="w-full items-center justify-center">
+                <Text className="text-[48px] font-extrabold text-[#1a1a1a] mb-4 text-center">
+                  {user.name}
+                </Text>
+
                 {user.forms && (
-                  <Text style={styles.formsText}>{user.forms}</Text>
+                  <Text className="text-[18px] text-[#666] mb-6 text-center">
+                    {user.forms}
+                  </Text>
                 )}
+
                 {user.example && (
-                  <Text style={styles.exampleText}>{user.example}</Text>
+                  <Text className="text-[16px] text-[#888] italic text-center px-5 mb-10">
+                    {user.example}
+                  </Text>
                 )}
-                <Text style={styles.tapHint}>Tap to view definition</Text>
+
+                <Text className="absolute bottom-6 text-[14px] text-[#bbb] text-center">
+                  Tap to view definition
+                </Text>
               </View>
             ) : (
-              // Arka yüz - Anlam
-              <View style={styles.backFace}>
-                <Text style={styles.definitionLabel}>Definition</Text>
-                <Text style={styles.meaningText}>{user.meaning}</Text>
-                <Text style={styles.tapHint}>Tap to go back</Text>
+              // Back face - Meaning
+              <View className="w-full items-center justify-center">
+                <Text className="text-[14px] text-[#999] uppercase tracking-[1px] mb-4">
+                  Definition
+                </Text>
+                <Text className="text-[24px] font-medium text-[#333] text-center leading-[36px]">
+                  {user.meaning}
+                </Text>
+                <Text className="absolute bottom-6 text-[14px] text-[#bbb] text-center">
+                  Tap to go back
+                </Text>
               </View>
             )}
           </View>
         </Pressable>
 
-        {/* Stacked card effect */}
-        <View style={[styles.stackedCard, styles.stackedCard1]} />
-        <View style={[styles.stackedCard, styles.stackedCard2]} />
-      </Animated.View>
+        {/* Stacked card effect (kept as Views with transforms) */}
+        <View
+          className="absolute w-full h-full bg-white/50 rounded-2xl"
+          style={{ transform: [{ translateY: 8 }, { scale: 0.97 }], zIndex: -1 }}
+        />
+        <View
+          className="absolute w-full h-full bg-white/50 rounded-2xl"
+          style={{ transform: [{ translateY: 16 }, { scale: 0.94 }], zIndex: -2 }}
+        />
+      </AnimatedStyledView>
     </GestureDetector>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    position: "absolute",
-    aspectRatio: 1 / 1.5,
-    width: tinderCardWidth,
-  },
-  cardContent: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: "white",
-    borderRadius: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  cardInner: {
-    width: "100%",
-    height: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 32,
-    borderRadius: 24,
-  },
-  frontFace: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-  },
-  backFace: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-  },
-  wordText: {
-    fontSize: 48,
-    fontWeight: "bold",
-    color: "#1a1a1a",
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  formsText: {
-    fontSize: 18,
-    color: "#666",
-    marginBottom: 24,
-    textAlign: "center",
-  },
-  exampleText: {
-    fontSize: 16,
-    color: "#888",
-    textAlign: "center",
-    fontStyle: "italic",
-    marginBottom: 40,
-    paddingHorizontal: 20,
-  },
-  definitionLabel: {
-    fontSize: 14,
-    color: "#999",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 16,
-  },
-  meaningText: {
-    fontSize: 24,
-    color: "#333",
-    textAlign: "center",
-    lineHeight: 36,
-    fontWeight: "500",
-  },
-  tapHint: {
-    position: "absolute",
-    bottom: 24,
-    fontSize: 14,
-    color: "#bbb",
-    textAlign: "center",
-  },
-  stackedCard: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
-    borderRadius: 24,
-    zIndex: -1,
-  },
-  stackedCard1: {
-    transform: [{ translateY: 8 }, { scale: 0.97 }],
-  },
-  stackedCard2: {
-    transform: [{ translateY: 16 }, { scale: 0.94 }],
-  },
-});

@@ -22,13 +22,8 @@ export default function VocabularyCards() {
 
   const handleSwipe = useCallback((response: SwipeResponse) => {
     if (response.status) {
-      // Öğrendi: kaldır ve sayaç artır
       setLearnedCount((p) => p + 1);
-      // setVocabulary((prev) =>
-      //   prev.filter((w) => w.uniqueKey !== response.uniqueKey)
-      // );
     } else {
-      // Tekrar göster: liste sonuna yeni uniqueKey ile ekle
       const newWord: Word = {
         ...response,
         uniqueKey: generateUniqueKey(response.id),
@@ -51,19 +46,17 @@ export default function VocabularyCards() {
 
       <View style={styles.cardsContainer}>
         {hasCards ? (
-          vocabulary
-          
-            .map((word, idx) => (
-              <TinderCard
-                key={word.uniqueKey}
-                user={word}
-                numOfCards={vocabulary.length}
-                index={idx}
-                activeIndex={activeIndex}
-                onResponse={handleSwipe}
-                isRemoving={false}
-              />
-            ))
+          vocabulary.map((word, idx) => (
+            <TinderCard
+              key={word.uniqueKey}
+              user={word}
+              numOfCards={vocabulary.length}
+              index={idx}
+              activeIndex={activeIndex}
+              onResponse={handleSwipe}
+              isRemoving={false}
+            />
+          ))
         ) : (
           <View style={styles.completed}>
             <Text style={styles.completedEmoji}>🎉</Text>
