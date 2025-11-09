@@ -1,25 +1,97 @@
 import TinderCard from "@/components/TinderCard";
+import { LinearGradient } from "expo-linear-gradient";
 import { Stack } from "expo-router";
 import React, { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import {
-    runOnJS,
-    useAnimatedReaction,
-    useSharedValue,
+  runOnJS,
+  useAnimatedReaction,
+  useSharedValue,
+  withSpring,
 } from "react-native-reanimated";
 
-// Vocabulary verileri
+// Vocabulary verileri - Genişletilmiş
 const initialVocabulary = [
-  { id: 1, name: "Ephemeral", meaning: "Lasting for a very short time" },
-  { id: 2, name: "Ubiquitous", meaning: "Present everywhere" },
-  { id: 3, name: "Serendipity", meaning: "Happy accident" },
-  { id: 4, name: "Mellifluous", meaning: "Sweet sounding" },
-  { id: 5, name: "Eloquent", meaning: "Fluent and persuasive" },
-  { id: 6, name: "Resilient", meaning: "Able to recover quickly" },
-  { id: 7, name: "Pragmatic", meaning: "Practical approach" },
-  { id: 8, name: "Ephemeral", meaning: "Temporary, fleeting" },
-  { id: 9, name: "Paradox", meaning: "Contradictory statement" },
-  { id: 10, name: "Zenith", meaning: "Highest point" },
+  { 
+    id: 1,
+    uniqueKey: 'word-1-0',
+    name: "Ephemeral", 
+    meaning: "Lasting for a very short time",
+    forms: "V1 - V2 - collab",
+    example: "The morning dew was ephemeral"
+  },
+  { 
+    id: 2,
+    uniqueKey: 'word-2-0',
+    name: "Ubiquitous", 
+    meaning: "Present, appearing, or found everywhere",
+    forms: "V1 - V2 - collab",
+    example: "Smartphones have become ubiquitous"
+  },
+  { 
+    id: 3,
+    uniqueKey: 'word-3-0',
+    name: "Serendipity", 
+    meaning: "The occurrence of events by chance in a happy way",
+    forms: "V1 - V2 - collab",
+    example: "Meeting you was pure serendipity"
+  },
+  { 
+    id: 4,
+    uniqueKey: 'word-4-0',
+    name: "Mellifluous", 
+    meaning: "Sweet or musical; pleasant to hear",
+    forms: "V1 - V2 - collab",
+    example: "Her mellifluous voice calmed everyone"
+  },
+  { 
+    id: 5,
+    uniqueKey: 'word-5-0',
+    name: "Eloquent", 
+    meaning: "Fluent or persuasive in speaking or writing",
+    forms: "V1 - V2 - collab",
+    example: "He gave an eloquent speech"
+  },
+  { 
+    id: 6,
+    uniqueKey: 'word-6-0',
+    name: "Resilient", 
+    meaning: "Able to withstand or recover quickly from difficulties",
+    forms: "V1 - V2 - collab",
+    example: "Children are remarkably resilient"
+  },
+  { 
+    id: 7,
+    uniqueKey: 'word-7-0',
+    name: "Pragmatic", 
+    meaning: "Dealing with things sensibly and realistically",
+    forms: "V1 - V2 - collab",
+    example: "We need a pragmatic approach"
+  },
+  { 
+    id: 8,
+    uniqueKey: 'word-8-0',
+    name: "Paradigm", 
+    meaning: "A typical example or pattern of something",
+    forms: "V1 - V2 - collab",
+    example: "This represents a paradigm shift"
+  },
+  { 
+    id: 9,
+    uniqueKey: 'word-9-0',
+    name: "Paradox", 
+    meaning: "A seemingly contradictory statement that may be true",
+    forms: "V1 - V2 - collab",
+    example: "It's a paradox of modern life"
+  },
+  { 
+    id: 10,
+    uniqueKey: 'word-10-0',
+    name: "Zenith", 
+    meaning: "The highest point reached; peak",
+    forms: "V1 - V2 - collab",
+    example: "At the zenith of his career"
+  },
 ];
 
 export default function VocabularyCards() {
@@ -27,6 +99,8 @@ export default function VocabularyCards() {
   const activeIndex = useSharedValue(0);
   const [index, setIndex] = useState(0);
   const [learnedWords, setLearnedWords] = useState<number[]>([]);
+  const [keyCounter, setKeyCounter] = useState(initialVocabulary.length);
+  const [removingKeys, setRemovingKeys] = useState<string[]>([]);
 
   useAnimatedReaction(
     () => activeIndex.value,
@@ -37,54 +111,94 @@ export default function VocabularyCards() {
     }
   );
 
-  const onResponse = (user: { name: string; meaning: string; id: number, status:boolean }) => {
+  const onResponse = (user: { name: string; meaning: string; id: number; status: boolean; uniqueKey: string }) => {
     if (user.status) {
-      // LIKE - Kelime öğrenildi, listeden çıkar
+      // LIKE - Kelime öğrenildi
       console.log(`✅ Learned: ${user.name}`);
-      setLearnedWords((prev) => [...prev, user.id]);
-      setVocabulary((prev) => prev.filter((word) => word.id !== user.id));
+     // setRemovingKeys((prev) => [...prev, user.uniqueKey]);
+      
+      // setTimeout(() => {
+      //   setLearnedWords((prev) => [...prev, user.id]);
+      //   setVocabulary((prev) => prev.filter((word) => word.uniqueKey !== user.uniqueKey));
+      //   setRemovingKeys((prev) => prev.filter((key) => key !== user.uniqueKey));
+      // }, 400); // Biraz daha uzun süre
     } else {
-      // DISLIKE - Kelimeyi tekrar göster, listenin sonuna ekle
+      // DISLIKE - Kelimeyi tekrar göster
       console.log(`🔄 Review again: ${user.name}`);
-      setVocabulary((prev) => [...prev, user]);
+      setTimeout(() => {
+        setKeyCounter((prev) => prev + 1);
+        const newWord = { ...user, uniqueKey: `word-${user.id}-${keyCounter}` };
+        setVocabulary((prev) => [...prev, newWord]);
+      }, 300);
     }
   };
 
-  // İstatistikler
+  const handleReview = () => {
+    if (vocabulary.length > 0) {
+      const currentWord = vocabulary[index];
+      activeIndex.value = withSpring(index + 1);
+      
+      setTimeout(() => {
+        setKeyCounter((prev) => prev + 1);
+        const newWord = { ...currentWord, uniqueKey: `word-${currentWord.id}-${keyCounter}` };
+        setVocabulary((prev) => [...prev, newWord]);
+      }, 300);
+    }
+  };
+
+  const handleKnow = () => {
+    if (vocabulary.length > 0) {
+      const currentWord = vocabulary[index];
+      setRemovingKeys((prev) => [...prev, currentWord.uniqueKey]);
+      activeIndex.value = withSpring(index + 1);
+      
+      setTimeout(() => {
+        setLearnedWords((prev) => [...prev, currentWord.id]);
+        setVocabulary((prev) => prev.filter((word) => word.uniqueKey !== currentWord.uniqueKey));
+        setRemovingKeys((prev) => prev.filter((key) => key !== currentWord.uniqueKey));
+      }, 400);
+    }
+  };
+
   const learned = learnedWords.length;
   const remaining = vocabulary.length;
+  const total = initialVocabulary.length;
+  const progress = learned / total;
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={["#7DD3FC", "#38BDF8", "#0EA5E9"]}
+      style={styles.container}
+    >
       <Stack.Screen options={{ headerShown: false }} />
-      
+
       {/* Progress Header */}
       <View style={styles.header}>
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{learned}</Text>
-            <Text style={styles.statLabel}>Learned</Text>
+        <View style={styles.progressContainer}>
+          <Text style={styles.progressText}>{learned.toString().padStart(2, '0')}</Text>
+          <View style={styles.progressBarContainer}>
+            <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
           </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{remaining}</Text>
-            <Text style={styles.statLabel}>Remaining</Text>
-          </View>
+          <Text style={styles.progressText}>{total.toString().padStart(2, '0')}</Text>
         </View>
       </View>
 
       {/* Cards */}
       <View style={styles.cardsContainer}>
-        {vocabulary.map((user, idx) => (
-          <TinderCard
-            key={user.id}
-            user={user}
-            numOfCards={vocabulary.length}
-            index={idx}
-            activeIndex={activeIndex}
-            onResponse={onResponse}
-          />
-        ))}
+        {vocabulary.map((user, idx) => {
+          const isRemoving = removingKeys.includes(user.uniqueKey);
+          return (
+            <TinderCard
+              key={user.uniqueKey}
+              user={user}
+              numOfCards={vocabulary.length}
+              index={idx}
+              activeIndex={activeIndex}
+              onResponse={onResponse}
+              isRemoving={isRemoving}
+            />
+          );
+        })}
 
         {/* Tüm kartlar bittiğinde */}
         {vocabulary.length === 0 && (
@@ -98,60 +212,64 @@ export default function VocabularyCards() {
         )}
       </View>
 
-      {/* Instructions */}
-      <View style={styles.instructionsContainer}>
-        <View style={styles.instructionItem}>
-          <Text style={styles.instructionIcon}>👈</Text>
-          <Text style={styles.instructionText}>Review Again</Text>
-        </View>
-        <View style={styles.instructionItem}>
-          <Text style={styles.instructionIcon}>👉</Text>
-          <Text style={styles.instructionText}>I Know This</Text>
-        </View>
+      {/* Action Buttons */}
+      <View style={styles.actionsContainer}>
+        <Pressable 
+          style={styles.actionButton}
+          onPress={handleReview}
+          disabled={vocabulary.length === 0}
+        >
+          <View style={styles.actionButtonInner}>
+            <Text style={styles.actionIcon}>🔄</Text>
+          </View>
+        </Pressable>
+
+        <Pressable 
+          style={styles.actionButton}
+          onPress={handleKnow}
+          disabled={vocabulary.length === 0}
+        >
+          <View style={styles.actionButtonInner}>
+            <Text style={styles.actionIcon}>✓</Text>
+          </View>
+        </Pressable>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
   },
   header: {
     paddingTop: 60,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingBottom: 20,
-    backgroundColor: "white",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
   },
-  statsContainer: {
+  progressContainer: {
     flexDirection: "row",
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "space-between",
   },
-  statItem: {
-    alignItems: "center",
-    paddingHorizontal: 30,
-  },
-  statNumber: {
-    fontSize: 32,
+  progressText: {
+    fontSize: 28,
     fontWeight: "bold",
-    color: "#333",
+    color: "white",
+    width: 50,
   },
-  statLabel: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 4,
+  progressBarContainer: {
+    flex: 1,
+    height: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    borderRadius: 4,
+    marginHorizontal: 16,
+    overflow: "hidden",
   },
-  statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: "#ddd",
+  progressBar: {
+    height: "100%",
+    backgroundColor: "white",
+    borderRadius: 4,
   },
   cardsContainer: {
     flex: 1,
@@ -169,31 +287,38 @@ const styles = StyleSheet.create({
   completedTitle: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#333",
+    color: "white",
     marginBottom: 8,
   },
   completedText: {
     fontSize: 16,
-    color: "#666",
+    color: "rgba(255, 255, 255, 0.9)",
     textAlign: "center",
   },
-  instructionsContainer: {
+  actionsContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
-    paddingVertical: 30,
-    paddingHorizontal: 20,
+    paddingVertical: 40,
+    paddingHorizontal: 60,
+  },
+  actionButton: {
+    width: 80,
+    height: 80,
+  },
+  actionButtonInner: {
+    width: "100%",
+    height: "100%",
     backgroundColor: "white",
-  },
-  instructionItem: {
+    borderRadius: 40,
     alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  instructionIcon: {
-    fontSize: 32,
-    marginBottom: 8,
-  },
-  instructionText: {
-    fontSize: 14,
-    color: "#666",
-    fontWeight: "500",
+  actionIcon: {
+    fontSize: 36,
   },
 });
