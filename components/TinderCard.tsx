@@ -85,6 +85,7 @@ export default function TinderCard({
     })
     .onEnd((event) => {
       if (Math.abs(event.velocityX) > 400) {
+
         translationX.value = withSpring(
           Math.sign(event.velocityX) * 500, 
           {
@@ -103,6 +104,7 @@ export default function TinderCard({
           id: index,
         });
       } else {
+       
         translationX.value = withSpring(0, {
           damping: 25,
           stiffness: 100,
